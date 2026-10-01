@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import 'dotenv/config';
 import { DataSource } from 'typeorm';
 if (!process.env.DB_HOST ||
     !process.env.DB_PORT ||
@@ -15,7 +16,7 @@ const AppDataSource = new DataSource({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     entities: ['src/models/*.ts'],
-    migrations: ['src/db/migrations/*.ts'],
+    migrations: ['src/db/migration/*.ts'],
     synchronize: false,
 });
 export default AppDataSource;

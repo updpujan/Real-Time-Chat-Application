@@ -1,0 +1,1 @@
+{"version":3,"file":"1790840563452-CreateChatTable.d.ts","sourceRoot":"","sources":["../../../src/db/migration/1790840563452-CreateChatTable.ts"],"names":[],"mappings":"AAAA,OAAO,EACL,kBAAkB,EAClB,WAAW,EAKZ,MAAM,SAAS,CAAC;AAEjB,qBAAa,4BAA6B,YAAW,kBAAkB;IACxD,EAAE,CAAC,WAAW,EAAE,WAAW,GAAG,OAAO,CAAC,IAAI,CAAC;IA2M3C,IAAI,CAAC,WAAW,EAAE,WAAW,GAAG,OAAO,CAAC,IAAI,CAAC;CAK3D"}
