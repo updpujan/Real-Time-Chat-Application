@@ -10,10 +10,11 @@ export default [
   js.configs.recommended,
 
   ...tseslint.configs.recommended,
+  eslintConfigPrettier,
 
   {
     rules: {
-      'no-console': 'off',
+      'no-console': 'warn',
 
       '@typescript-eslint/no-unused-vars': [
         'error',
