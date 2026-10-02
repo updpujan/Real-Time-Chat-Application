@@ -4,7 +4,12 @@ import tseslint from 'typescript-eslint';
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', 'scripts/sequelize-cli.cjs'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'scripts/sequelize-cli.cjs',
+      'config/sequelize.config.cjs',
+    ],
   },
 
   js.configs.recommended,

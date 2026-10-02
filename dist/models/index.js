@@ -4,5 +4,5 @@ import Room from './room.js';
 import RoomMember from './roomMembers.js';
 import Message from './message.js';
 import './associations.js';
-export { User, Session, Room, RoomMember, Message, };
+export { User, Session, Room, RoomMember, Message };
 //# sourceMappingURL=index.js.map

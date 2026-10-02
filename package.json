@@ -13,7 +13,10 @@
     "prepare": "husky",
     "migration:status": "node scripts/sequelize-cli.cjs db:migrate:status",
     "migration:run": "node scripts/sequelize-cli.cjs db:migrate",
-    "migration:revert": "node scripts/sequelize-cli.cjs db:migrate:undo"
+    "migration:revert": "node scripts/sequelize-cli.cjs db:migrate:undo",
+    "migration:status:prod": "sequelize-cli db:migrate:status --migrations-path dist/migrations",
+    "migration:run:prod": "sequelize-cli db:migrate --migrations-path dist/migrations",
+    "migration:revert:prod": "sequelize-cli db:migrate:undo --migrations-path dist/migrations"
   },
   "lint-staged": {
     "*.{js,ts}": [
