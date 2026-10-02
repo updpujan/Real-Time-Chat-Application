@@ -2,6 +2,8 @@ import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger.js';
 
+import healthcheck from './routes/healthRoute.js';
+
 const app = express();
 
 app.use(express.json());
@@ -11,5 +13,5 @@ app.set('view engine', 'ejs');
 app.set('views', './src/views');
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
+app.use('/', healthcheck);
 export default app;
