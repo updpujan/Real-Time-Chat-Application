@@ -38,9 +38,11 @@
   },
   "homepage": "https://github.com/updpujan/Real-Time-Chat-Application#readme",
   "dependencies": {
+    "connect-session-sequelize": "^8.0.6",
     "dotenv": "^18.0.4",
     "ejs": "^6.0.1",
     "express": "^5.2.1",
+    "express-session": "^1.19.0",
     "pg": "^8.23.1",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.8",
@@ -50,6 +52,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
+    "@types/express-session": "^1.19.0",
     "@types/node": "^26.6.3",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",

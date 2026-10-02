@@ -2,9 +2,9 @@ import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/database.js';
 
 interface SessionAttributes {
-  id: string;
-  userId: number;
-  expiresAt: Date;
+  sid: string;
+  expires: Date;
+  data: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -15,35 +15,29 @@ class Session
   extends Model<SessionAttributes, SessionCreationAttributes>
   implements SessionAttributes
 {
-  declare id: string;
-  declare userId: number;
-  declare expiresAt: Date;
+  declare sid: string;
+  declare expires: Date;
+  declare data: string;
   declare createdAt: Date;
   declare updatedAt: Date;
 }
 
 Session.init(
   {
-    id: {
+    sid: {
       type: DataTypes.STRING(255),
       primaryKey: true,
       allowNull: false,
     },
 
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      field: 'user_id',
-      references: {
-        model: 'users',
-        key: 'id',
-      },
-    },
-
-    expiresAt: {
+    expires: {
       type: DataTypes.DATE,
       allowNull: false,
-      field: 'expires_at',
+    },
+
+    data: {
+      type: DataTypes.TEXT,
+      allowNull: false,
     },
 
     createdAt: {

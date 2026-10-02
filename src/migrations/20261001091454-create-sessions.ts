@@ -3,25 +3,19 @@ import { DataTypes } from 'sequelize';
 
 export async function up(queryInterface: QueryInterface): Promise<void> {
   await queryInterface.createTable('sessions', {
-    id: {
+    sid: {
       type: DataTypes.STRING(255),
       primaryKey: true,
       allowNull: false,
     },
 
-    user_id: {
-      type: DataTypes.INTEGER,
+    expires: {
+      type: DataTypes.DATE,
       allowNull: false,
-      references: {
-        model: 'users',
-        key: 'id',
-      },
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
     },
 
-    expires_at: {
-      type: DataTypes.DATE,
+    data: {
+      type: DataTypes.TEXT,
       allowNull: false,
     },
 
