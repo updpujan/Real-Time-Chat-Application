@@ -32,14 +32,12 @@ export const loginController = async (req: Request, res: Response, _next: NextFu
 
 export const logoutController = async (req: Request, res: Response, _next: NextFunction) => {
   try {
-    console.log(req.session.userId);
-
     if (!req.session.userId) {
       throw new AppError({ status: 401, message: 'User not Authenticated' });
     }
     req.session.destroy((error) => {
       if (error) {
-        throw new AppError({ status: 401, message: 'Failed to logout', error });
+        throw new AppError({ status: 503, message: 'Failed to destroy session', error });
       }
       res.clearCookie('connect.sid');
 
