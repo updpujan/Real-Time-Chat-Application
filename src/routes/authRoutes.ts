@@ -1,11 +1,11 @@
 import express from 'express';
-import { registerValidate, emailValidate } from '../middleware/validate.js';
-import { registerController } from '../controller/authController.js';
+import { registerValidate, emailValidate, loginValidate } from '../middleware/validate.js';
+import { registerController, loginController } from '../controller/authController.js';
 
 const route = express.Router();
 
 route.post('/register', registerValidate, emailValidate, registerController);
 
-//route.post('/login',);
+route.post('/login', loginValidate, loginController);
 
 export default route;

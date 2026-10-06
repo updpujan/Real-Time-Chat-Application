@@ -13,19 +13,24 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-//unprotected routes
+// Swagger - api docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Session middleware
+app.use(sessionMiddleware);
+
+// Unprotected routes
 app.use('/', healthcheck);
+// Auth routes //
 app.use('/auth', authRoute);
 
-//frontend
+//protected routes
+
+// Frontend
 app.set('view engine', 'ejs');
 app.set('views', './src/views');
 
-//protected routes
-app.use(sessionMiddleware);
-
-//error handler
+// Error handler
 app.use(errorHandler);
 
 export default app;
