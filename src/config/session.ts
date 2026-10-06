@@ -8,6 +8,7 @@ const SequelizeStore = connectSessionSequelize(session.Store);
 const sessionStore = new SequelizeStore({
   db: sequelize,
   tableName: 'sessions',
+  checkExpirationInterval: 15 * 60 * 1000,
 });
 
 const sessionMiddleware = session({
