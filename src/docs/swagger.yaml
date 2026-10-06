@@ -9,6 +9,224 @@ servers:
   - url: http://localhost:3000
 
 paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      description: Creates a new user account.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+                  example: Pujan Upadhyay
+                email:
+                  type: string
+                  format: email
+                  example: pujan@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  maxLength: 20
+                  example: SecurePass1!
+      responses:
+        '201':
+          description: User registered successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: user registered sucessfully
+        '400':
+          description: Request body is missing or failed validation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    examples:
+                      noData:
+                        value: No data in body
+                      validation:
+                        value: Validation Error
+                  error:
+                    type: array
+                    items:
+                      type: string
+                    example:
+                      - Password must be at least 8 characters
+        '409':
+          description: A user with the supplied email already exists.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User already exists
+        '503':
+          description: Service unavailable.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Service unavailable
+                  error:
+                    type: string
+
+  /auth/login:
+    post:
+      summary: Log in a user
+      description: Authenticates a user and creates an application session.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: pujan@example.com
+                password:
+                  type: string
+                  format: password
+                  example: SecurePass1!
+      responses:
+        '200':
+          description: User logged in successfully.
+          headers:
+            Set-Cookie:
+              description: Session cookie created by the server.
+              schema:
+                type: string
+                example: connect.sid=s%3Aexample-session-id; Path=/; HttpOnly
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: login sucessfully
+        '400':
+          description: Request body is missing or failed validation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    examples:
+                      noData:
+                        value: No data in body
+                      validation:
+                        value: Validation Error
+                  error:
+                    type: array
+                    items:
+                      type: string
+                    example:
+                      - Invalid email format
+        '401':
+          description: The email or password is incorrect.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid login credentails
+        '503':
+          description: Service unavailable.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Service unavailable
+                  error:
+                    type: string
+
+  /auth/logout:
+    post:
+      summary: Log out the current user
+      description: Destroys the authenticated user's session and clears the session cookie.
+      tags:
+        - Authentication
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: User logged out successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logout sucessfully
+        '401':
+          description: The user is not authenticated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User not Authenticated
+                  error:
+                    type: string
+        '503':
+          description: The session could not be destroyed or the service is unavailable.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    examples:
+                      sessionDestroyFailed:
+                        value: Failed to destroy session
+                      serviceUnavailable:
+                        value: Service unavailable
+                  error:
+                    type: string
+
   /health:
     get:
       summary: Check server and database health
@@ -50,3 +268,10 @@ paths:
                   database:
                     type: string
                     example: down
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: connect.sid
