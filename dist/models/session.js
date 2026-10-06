@@ -3,24 +3,18 @@ import sequelize from '../config/database.js';
 class Session extends Model {
 }
 Session.init({
-    id: {
+    sid: {
         type: DataTypes.STRING(255),
         primaryKey: true,
         allowNull: false,
     },
-    userId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        field: 'user_id',
-        references: {
-            model: 'users',
-            key: 'id',
-        },
-    },
-    expiresAt: {
+    expires: {
         type: DataTypes.DATE,
         allowNull: false,
-        field: 'expires_at',
+    },
+    data: {
+        type: DataTypes.TEXT,
+        allowNull: false,
     },
     createdAt: {
         type: DataTypes.DATE,

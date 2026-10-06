@@ -1,16 +1,16 @@
 import { Model, Optional } from 'sequelize';
 interface SessionAttributes {
-    id: string;
-    userId: number;
-    expiresAt: Date;
+    sid: string;
+    expires: Date;
+    data: string;
     createdAt: Date;
     updatedAt: Date;
 }
 type SessionCreationAttributes = Optional<SessionAttributes, 'createdAt' | 'updatedAt'>;
 declare class Session extends Model<SessionAttributes, SessionCreationAttributes> implements SessionAttributes {
-    id: string;
-    userId: number;
-    expiresAt: Date;
+    sid: string;
+    expires: Date;
+    data: string;
     createdAt: Date;
     updatedAt: Date;
 }
