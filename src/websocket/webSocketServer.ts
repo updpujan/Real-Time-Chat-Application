@@ -1,13 +1,34 @@
-import { WebSocketServer } from 'ws';
 import { Server } from 'node:http';
+import { WebSocketServer, WebSocket } from 'ws';
+import authenticateWebSocket from './sessionAuth.js';
+import { AuthenticatedWebSocket } from './types.js';
 
 export const initilizeWebSocket = (server: Server) => {
   const wss = new WebSocketServer({
-    server,
+    noServer: true,
   });
 
-  wss.on('connection', (socket) => {
+  server.on('upgrade', async (request, socket, head) => {
+    try {
+      const userId = await authenticateWebSocket(request);
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        const authenticatedSocket = ws as AuthenticatedWebSocket;
+        authenticatedSocket.userId = Number(userId);
+        wss.emit('connection', authenticatedSocket, request);
+      });
+    } catch (err) {
+      socket.write(
+        'HTTP/1.1 401 Unauthorized\r\n' + 'Connection: close\r\n' + `Error: ${err}\r\n` + '\r\n',
+      );
+      socket.destroy();
+      console.log('Websocket Authentication Failed:', err);
+    }
+  });
+
+  wss.on('connection', (socket: AuthenticatedWebSocket, request) => {
     console.log('WebSocket client connected');
+    console.log('Authenticated user:', socket.userId);
+    console.log('Cookie:', request.headers.cookie);
 
     socket.on('message', (message) => {
       try {
