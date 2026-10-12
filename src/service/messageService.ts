@@ -1,5 +1,6 @@
 import User from '../models/users.js';
 import Message from '../models/message.js';
+import { Op } from 'sequelize';
 import type { PrivateMessageInput } from '../schema/websocket/privateMessageSchema.js';
 
 type SendPrivateMessageResult =
@@ -42,4 +43,73 @@ export const sendPrivateMessage = async (
     success: true,
     message,
   };
+};
+
+interface GetPrivateMessagesOptions {
+  currentUserId: number;
+  otherUserId: number;
+  limit: number;
+  offset: number;
+}
+
+export const getPrivateMessages = async ({
+  currentUserId,
+  otherUserId,
+  limit,
+  offset,
+}: GetPrivateMessagesOptions) => {
+  const { count, rows } = await Message.findAndCountAll({
+    where: {
+      roomId: null,
+      [Op.or]: [
+        {
+          senderId: currentUserId,
+          receiverId: otherUserId,
+        },
+        {
+          senderId: otherUserId,
+          receiverId: currentUserId,
+        },
+      ],
+    },
+    attributes: ['id', 'senderId', 'receiverId', 'content', 'createdAt'],
+    order: [
+      ['createdAt', 'DESC'],
+      ['id', 'DESC'],
+    ],
+    limit,
+    offset,
+  });
+
+  return {
+    messages: rows,
+    total: count,
+    limit,
+    offset,
+    hasMore: offset + rows.length < count,
+  };
+};
+
+type DeleteMessageResult = { success: true } | { success: false; reason: 'NOT_FOUND' };
+
+export const deletePrivateMessage = async (
+  messageId: number,
+  senderId: number,
+): Promise<DeleteMessageResult> => {
+  const message = await Message.findOne({
+    where: {
+      id: messageId,
+      senderId,
+      roomId: null,
+      receiverId: {
+        [Op.not]: null,
+      },
+    },
+  });
+
+  if (!message) {
+    return { success: false, reason: 'NOT_FOUND' };
+  }
+  await message.destroy();
+  return { success: true };
 };

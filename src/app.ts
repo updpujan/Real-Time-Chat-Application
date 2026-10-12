@@ -5,7 +5,9 @@ import sessionMiddleware from './config/session.js';
 
 import healthcheck from './routes/healthRoute.js';
 import authRoute from './routes/authRoutes.js';
+import chatRoute from './routes/chatRoute.js';
 
+import { requireAuth } from './middleware/requireMiddleware.js';
 import errorHandler from './middleware/errorHander.js';
 
 const app = express();
@@ -25,6 +27,7 @@ app.use('/', healthcheck);
 app.use('/auth', authRoute);
 
 //protected routes
+app.use('/chat', requireAuth, chatRoute);
 
 // Frontend
 app.set('view engine', 'ejs');

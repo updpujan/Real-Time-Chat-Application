@@ -7,13 +7,16 @@ export interface WebSocketMessagee {
 
 export interface AuthenticatedWebSocket extends WebSocket {
   userId: number;
+  isAlive?: boolean;
 }
 
 export type WebSocketEventType =
   | 'user_online'
   | 'user_offline'
+  | 'online_users'
   | 'chat_message'
   | 'typing'
+  | 'stop_typing'
   | 'join_room'
   | 'leave_room'
   | 'room_joined'
