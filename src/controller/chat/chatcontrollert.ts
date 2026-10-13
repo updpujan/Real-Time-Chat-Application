@@ -51,7 +51,6 @@ export const getchatHistory = async (req: Request, res: Response, next: NextFunc
     });
 
     res.status(200).json({
-      status: 200,
       message: 'Conversation history retrieved successfully',
       data: result.messages,
       pagination: {
