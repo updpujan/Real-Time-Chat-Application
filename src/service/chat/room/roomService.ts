@@ -96,3 +96,48 @@ export const joinRoom = async (roomId: number, userId: number) => {
     return membership;
   });
 };
+
+export const leaveRoom = async (roomId: number, userId: number) => {
+  return sequelize.transaction(async (transaction) => {
+    const room = await Room.findByPk(roomId, {
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+
+    if (!room) {
+      throw new AppError({ status: 404, message: 'Room not found' });
+    }
+    const exestingMembership = await RoomMember.findOne({
+      where: { roomId, userId },
+      transaction,
+    });
+
+    if (!exestingMembership) {
+      throw new AppError({ status: 400, message: 'Not a mbember of this room' });
+    }
+
+    if (room.createdBy == userId) {
+      throw new AppError({ status: 409, message: 'Cannot leave room beofre room owner transfer' });
+    }
+
+    await exestingMembership.destroy({ transaction });
+    return;
+  });
+};
+
+export const getMyRooms = async (userId: number) => {
+  const membership = await RoomMember.findAll({
+    where: { userId },
+    attributes: ['roomId', 'joinedAt'],
+    include: [
+      {
+        model: Room,
+        as: 'room',
+        attributes: ['id', 'name', 'createdBy', 'maxMembers', 'createdAt'],
+      },
+    ],
+    order: [['joinedAt', 'DESC']],
+  });
+
+  return membership;
+};
