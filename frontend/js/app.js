@@ -100,6 +100,8 @@ if (isChatPage) {
   const activeMeta = document.querySelector('#active-meta');
   const typingIndicator = document.querySelector('#typing-indicator');
   const connectionStatus = document.querySelector('#connection-status');
+  const searchInput = document.querySelector('#conversation-search');
+  const searchResults = document.querySelector('#search-results');
   const conversations = new Map();
   const messages = new Map();
   const onlineUsers = new Set();
@@ -108,6 +110,7 @@ if (isChatPage) {
   let socket = null;
   let typingTimer = null;
   let hasSentTyping = false;
+  let searchTimer = null;
 
   const colorFor = (value) => {
     const colors = ['#6658d9', '#16835d', '#d9822b', '#c83d50', '#2775ca', '#9b4dca'];
@@ -119,6 +122,97 @@ if (isChatPage) {
   const avatarText = (name) => (name || '?').trim().charAt(0).toUpperCase();
 
   const conversationKey = (conversation) => `${conversation.type}:${conversation.id}`;
+
+  const hideSearchResults = () => {
+    searchResults.classList.add('is-hidden');
+    searchResults.innerHTML = '';
+  };
+
+  const addTemporaryConversation = (conversation) => {
+    const key = conversationKey(conversation);
+    if (!conversations.has(key)) {
+      conversations.set(key, { ...conversation, lastMessageAt: null });
+    }
+    return conversations.get(key);
+  };
+
+  const renderSearchResults = (result) => {
+    searchResults.innerHTML = '';
+    const people = result.people || [];
+    const groups = result.groups || [];
+
+    if (!people.length && !groups.length) {
+      searchResults.innerHTML = '<span class="search-empty">No people or groups found.</span>';
+      searchResults.classList.remove('is-hidden');
+      return;
+    }
+
+    const createSection = (title, items, type) => {
+      if (!items.length) return;
+      const section = document.createElement('div');
+      section.className = 'search-result-section';
+      section.innerHTML = `<span class="search-result-heading">${title}</span>`;
+
+      items.forEach((item) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'search-result';
+        const isGroup = type === 'group';
+        const unavailable = isGroup && item.isFull && !item.isMember;
+        button.disabled = unavailable;
+        button.innerHTML = `
+          <span class="avatar" style="background:${colorFor(`${type}:${item.id}`)}">${avatarText(item.name)}</span>
+          <span class="search-result-copy">
+            <strong>${item.name}</strong>
+            <small>${isGroup ? `${item.memberCount}/${item.maxMembers} members${item.isMember ? ' · Joined' : unavailable ? ' · Full' : ' · Join group'}` : 'Start private conversation'}</small>
+          </span>
+        `;
+        button.addEventListener('click', () => handleSearchSelection(item, type));
+        section.append(button);
+      });
+      searchResults.append(section);
+    };
+
+    createSection('People', people, 'private');
+    createSection('Groups', groups, 'group');
+    searchResults.classList.remove('is-hidden');
+  };
+
+  const handleSearchSelection = async (item, type) => {
+    try {
+      if (type === 'private') {
+        const conversation = addTemporaryConversation({
+          type: 'private',
+          id: Number(item.id),
+          name: item.name,
+        });
+        hideSearchResults();
+        searchInput.value = '';
+        renderConversations();
+        await selectConversation(conversation);
+        return;
+      }
+
+      if (!item.isMember) {
+        await request(`/chat/joinRoom/${item.id}`, { method: 'POST' });
+        showToast(`Joined ${item.name}`);
+      }
+
+      const conversation = addTemporaryConversation({
+        type: 'group',
+        id: Number(item.id),
+        name: item.name,
+        lastMessageAt: null,
+      });
+      roomMemberCounts.set(Number(item.id), Number(item.memberCount) + (item.isMember ? 0 : 1));
+      hideSearchResults();
+      searchInput.value = '';
+      renderConversations();
+      await selectConversation(conversation);
+    } catch (error) {
+      showToast(formatError(error), 'error');
+    }
+  };
 
   const renderConversations = () => {
     conversationList.innerHTML = '';
@@ -374,6 +468,35 @@ if (isChatPage) {
         '<p class="muted sidebar-message">Unable to load conversations.</p>';
     }
   };
+
+  searchInput.addEventListener('input', () => {
+    window.clearTimeout(searchTimer);
+    const query = searchInput.value.trim();
+    if (!query) {
+      hideSearchResults();
+      return;
+    }
+
+    searchTimer = window.setTimeout(async () => {
+      try {
+        const result = await request(`/chat/searchConversation?q=${encodeURIComponent(query)}`);
+        renderSearchResults(result.data || {});
+      } catch (error) {
+        showToast(formatError(error), 'error');
+      }
+    }, 250);
+  });
+
+  searchInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      hideSearchResults();
+      searchInput.blur();
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('.chat-search-wrap')) hideSearchResults();
+  });
 
   loadChat();
 }

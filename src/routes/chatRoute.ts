@@ -7,6 +7,7 @@ import {
   getMyRoom,
 } from '../controller/chat/roomController.js';
 import { getConversations } from '../controller/chat/conversation.js';
+import searchCOnversationController from '../controller/searchConversation.js';
 
 const route = express.Router();
 //private message
@@ -19,5 +20,6 @@ route.delete('/leaveRoom/:roomId/member/me', leaveRoomController);
 route.get('/allRooms', getMyRoom);
 route.get('/conversation/:type/:id', getchatHistory);
 route.get('/conversation', getConversations);
+route.get('/searchConversation', searchCOnversationController);
 
 export default route;

@@ -12,12 +12,17 @@
         <a class="brand-mark" href="/chat.html">Real-Time Chat</a>
         <button id="logout-button" class="button button-logout" type="button">Log out</button>
       </div>
-      <input
-        class="chat-search"
-        type="search"
-        placeholder="Search conversations..."
-        aria-label="Search conversations"
-      />
+      <div class="chat-search-wrap">
+        <input
+          id="conversation-search"
+          class="chat-search"
+          type="search"
+          placeholder="Search people or groups..."
+          aria-label="Search people or groups"
+          autocomplete="off"
+        />
+        <div id="search-results" class="search-results is-hidden"></div>
+      </div>
     </header>
     <main class="chat-layout">
       <aside class="conversation-sidebar">
