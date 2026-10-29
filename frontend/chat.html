@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat | Real-Time Chat</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="chat-page">
+    <header class="topbar">
+      <a class="brand-mark" href="/chat.html">Real-Time Chat</a>
+      <button id="logout-button" class="button button-logout" type="button">Log out</button>
+    </header>
+    <main class="empty-chat">
+      <div class="empty-chat-icon" aria-hidden="true">✦</div>
+      <p class="eyebrow">Your chat space</p>
+      <h1>Nothing here yet.</h1>
+      <p class="muted">Your conversations will appear here when chat is ready.</p>
+    </main>
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+    <script type="module" src="/js/app.js"></script>
+  </body>
+</html>

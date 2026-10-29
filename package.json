@@ -19,7 +19,7 @@
     "migration:revert:prod": "sequelize-cli db:migrate:undo --migrations-path dist/migrations"
   },
   "lint-staged": {
-    "*.{js,ts}": [
+    "src/!(frontend)/**/*.{js,ts}": [
       "eslint --fix",
       "prettier --write"
     ],
