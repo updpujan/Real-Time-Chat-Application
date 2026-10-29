@@ -8,14 +8,52 @@
   </head>
   <body class="chat-page">
     <header class="topbar">
-      <a class="brand-mark" href="/chat.html">Real-Time Chat</a>
-      <button id="logout-button" class="button button-logout" type="button">Log out</button>
+      <div class="topbar-main">
+        <a class="brand-mark" href="/chat.html">Real-Time Chat</a>
+        <button id="logout-button" class="button button-logout" type="button">Log out</button>
+      </div>
+      <input
+        class="chat-search"
+        type="search"
+        placeholder="Search conversations..."
+        aria-label="Search conversations"
+      />
     </header>
-    <main class="empty-chat">
-      <div class="empty-chat-icon" aria-hidden="true">✦</div>
-      <p class="eyebrow">Your chat space</p>
-      <h1>Nothing here yet.</h1>
-      <p class="muted">Your conversations will appear here when chat is ready.</p>
+    <main class="chat-layout">
+      <aside class="conversation-sidebar">
+        <div class="sidebar-heading">
+          <div>
+            <p class="eyebrow">Messages</p>
+            <h1>Conversations</h1>
+          </div>
+          <span id="connection-status" class="connection-status">Connecting…</span>
+        </div>
+        <div id="conversation-list" class="conversation-list">
+          <p class="muted sidebar-message">Loading conversations…</p>
+        </div>
+      </aside>
+      <section class="conversation-panel">
+        <div id="conversation-header" class="conversation-header is-hidden">
+          <span id="active-avatar" class="avatar"></span>
+          <div>
+            <h2 id="active-name">Conversation</h2>
+            <p id="active-meta" class="muted"></p>
+          </div>
+        </div>
+        <div id="message-list" class="message-list">
+          <div class="empty-chat">
+            <div class="empty-chat-icon" aria-hidden="true">✦</div>
+            <p class="eyebrow">Your chat space</p>
+            <h1>Select a conversation</h1>
+            <p class="muted">Choose a conversation to view your messages.</p>
+          </div>
+        </div>
+        <div id="typing-indicator" class="typing-indicator" aria-live="polite"></div>
+        <form id="message-form" class="message-form is-hidden">
+          <input id="message-input" type="text" placeholder="Write a message…" autocomplete="off" />
+          <button class="button button-primary" type="submit">Send</button>
+        </form>
+      </section>
     </main>
     <div id="toast-container" class="toast-container" aria-live="polite"></div>
     <script type="module" src="/js/app.js"></script>
