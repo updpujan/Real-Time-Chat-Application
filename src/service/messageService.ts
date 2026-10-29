@@ -53,6 +53,12 @@ interface GetPrivateMessagesOptions {
   offset: number;
 }
 
+interface GetGroupMessagesOptions {
+  roomId: number;
+  limit: number;
+  offset: number;
+}
+
 export const getPrivateMessages = async ({
   currentUserId,
   otherUserId,
@@ -74,6 +80,29 @@ export const getPrivateMessages = async ({
       ],
     },
     attributes: ['id', 'senderId', 'receiverId', 'content', 'createdAt'],
+    order: [
+      ['createdAt', 'DESC'],
+      ['id', 'DESC'],
+    ],
+    limit,
+    offset,
+  });
+
+  return {
+    messages: rows,
+    total: count,
+    limit,
+    offset,
+    hasMore: offset + rows.length < count,
+  };
+};
+
+export const getGroupMessages = async ({ roomId, limit, offset }: GetGroupMessagesOptions) => {
+  const { count, rows } = await Message.findAndCountAll({
+    where: {
+      roomId,
+    },
+    attributes: ['id', 'senderId', 'receiverId', 'roomId', 'content', 'createdAt'],
     order: [
       ['createdAt', 'DESC'],
       ['id', 'DESC'],
@@ -136,44 +165,5 @@ export const sendRoomMessage = async (senderId: number, roomId: number, content:
   return {
     success: true as const,
     message,
-  };
-};
-
-export const getRoomMessageHistory = async (
-  userId: number,
-  roomId: number,
-  limit: number,
-  offset: number,
-) => {
-  const access = await canUserAccessRoom(userId, roomId);
-
-  if (!access.allowed) {
-    return {
-      success: false as const,
-      reason:
-        access.reason === 'ROOM_NOT_FOUND' ? 'Room not found' : 'You are not a member of this room',
-    };
-  }
-
-  const result = await Message.findAndCountAll({
-    where: {
-      roomId,
-      receiverId: {
-        [Op.is]: null,
-      },
-    },
-    attributes: ['id', 'roomId', 'senderId', 'content', 'createdAt'],
-    order: [
-      ['createdAt', 'DESC'],
-      ['id', 'DESC'],
-    ],
-    limit,
-    offset,
-  });
-
-  return {
-    success: true as const,
-    messages: result.rows,
-    total: result.count,
   };
 };
