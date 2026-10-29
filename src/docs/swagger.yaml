@@ -61,11 +61,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    examples:
-                      noData:
-                        value: No data in body
-                      validation:
-                        value: Validation Error
+                    example: Validation Error
                   error:
                     type: array
                     items:
@@ -145,11 +141,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    examples:
-                      noData:
-                        value: No data in body
-                      validation:
-                        value: Validation Error
+                    example: Validation Error
                   error:
                     type: array
                     items:
@@ -219,11 +211,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    examples:
-                      sessionDestroyFailed:
-                        value: Failed to destroy session
-                      serviceUnavailable:
-                        value: Service unavailable
+                    example: Failed to destroy session
                   error:
                     type: string
 
@@ -269,9 +257,636 @@ paths:
                     type: string
                     example: down
 
+  /chat/chatHistory/{userId}:
+    get:
+      summary: Get private conversation history
+      description: Returns the authenticated user's conversation with another user.
+      tags:
+        - Chat
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/MessageLimit'
+        - $ref: '#/components/parameters/MessageOffset'
+      responses:
+        '200':
+          description: Conversation history retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivateConversationResponse'
+        '400':
+          description: The user ID or pagination parameters are invalid, or the requested conversation is with the current user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidParameters:
+                  value:
+                    message: Invalid Request Parameter
+                    error:
+                      - message: Invalid input
+                sameUser:
+                  value:
+                    message: No chat between same user
+        '401':
+          description: The user is not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Authentication required
+        '404':
+          description: The other user does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: User not found
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /chat/deleteMessage/{messId}:
+    delete:
+      summary: Delete a private message
+      description: Deletes a private message owned by the authenticated user.
+      tags:
+        - Chat
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: messId
+          in: path
+          required: true
+          description: ID of the private message to delete.
+          schema:
+            type: integer
+            minimum: 1
+          example: 42
+      responses:
+        '204':
+          description: Private message deleted successfully.
+        '400':
+          description: The message ID is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Invalid message id
+        '401':
+          description: The user is not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Authentication required
+        '404':
+          description: The message was not found or is not owned by the authenticated user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: NOT_FOUND
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /chat/createRoom:
+    post:
+      summary: Create a chat room
+      description: Creates a room and adds the authenticated user as its first member.
+      tags:
+        - Rooms
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoomRequest'
+            examples:
+              defaultCapacity:
+                value:
+                  name: Engineering
+              customCapacity:
+                value:
+                  name: Project Alpha
+                  maxMembers: 20
+      responses:
+        '201':
+          description: Room created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - data
+                properties:
+                  message:
+                    type: string
+                    example: Room create sucessfully
+                  data:
+                    $ref: '#/components/schemas/Room'
+        '400':
+          description: The room name or member limit is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Invalid Request Parameter
+                error:
+                  - message: Invalid input
+        '401':
+          $ref: '#/components/responses/AuthenticationRequired'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /chat/joinRoom/{roomId}:
+    post:
+      summary: Join a chat room
+      description: Adds the authenticated user to a room.
+      tags:
+        - Rooms
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RoomId'
+      responses:
+        '201':
+          description: User joined the room successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - data
+                properties:
+                  message:
+                    type: string
+                    example: Room joined sucessfully
+                  data:
+                    $ref: '#/components/schemas/RoomMembership'
+        '400':
+          description: The room ID is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: paramter validation error
+        '401':
+          $ref: '#/components/responses/AuthenticationRequired'
+        '404':
+          description: The room does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Room not found
+        '409':
+          description: The user is already a member or the room is at capacity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                alreadyMember:
+                  value:
+                    message: User already a member for this room
+                capacity:
+                  value:
+                    message: Max Room Capacity exceeds
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /chat/leaveRoom/{roomId}/member/me:
+    delete:
+      summary: Leave a chat room
+      description: Removes the authenticated user from a room. The room owner cannot leave before ownership is transferred.
+      tags:
+        - Rooms
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RoomId'
+      responses:
+        '204':
+          description: User left the room successfully.
+        '400':
+          description: The room ID is invalid or the user is not a member.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidId:
+                  value:
+                    message: validation error
+                notMember:
+                  value:
+                    message: Not a mbember of this room
+        '401':
+          $ref: '#/components/responses/AuthenticationRequired'
+        '404':
+          description: The room does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Room not found
+        '409':
+          description: The room owner cannot leave the room before ownership transfer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Cannot leave room beofre room owner transfer
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /chat/allRooms:
+    get:
+      summary: List rooms for the current user
+      description: Returns all rooms that the authenticated user belongs to.
+      tags:
+        - Rooms
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Rooms retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: Rooms retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RoomMembershipWithRoom'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequired'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /chat/{roomId}/messages:
+    get:
+      summary: Get room message history
+      description: Returns paginated messages from a room the authenticated user belongs to.
+      tags:
+        - Rooms
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RoomId'
+        - $ref: '#/components/parameters/RoomMessageLimit'
+        - $ref: '#/components/parameters/RoomMessageOffset'
+      responses:
+        '200':
+          description: Room messages retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomMessagesResponse'
+        '400':
+          description: The room ID or pagination parameters are invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Invalid room ID or pagination parameters
+        '401':
+          description: The user is not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Authentication required
+                error: User is not authenticated
+        '403':
+          description: The user is not a member of the room.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: You are not a member of this room
+        '404':
+          description: The room does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Room not found
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
 components:
   securitySchemes:
     cookieAuth:
       type: apiKey
       in: cookie
       name: connect.sid
+
+  parameters:
+    UserId:
+      name: userId
+      in: path
+      required: true
+      description: ID of the other user in the conversation.
+      schema:
+        type: integer
+        minimum: 1
+      example: 2
+    RoomId:
+      name: roomId
+      in: path
+      required: true
+      description: ID of the room.
+      schema:
+        type: integer
+        minimum: 1
+      example: 1
+    MessageLimit:
+      name: limit
+      in: query
+      required: false
+      description: Maximum number of private messages to return.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+      example: 10
+    MessageOffset:
+      name: offset
+      in: query
+      required: false
+      description: Number of private messages to skip.
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      example: 0
+    RoomMessageLimit:
+      name: limit
+      in: query
+      required: false
+      description: Maximum number of room messages to return.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      example: 20
+    RoomMessageOffset:
+      name: offset
+      in: query
+      required: false
+      description: Number of room messages to skip.
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      example: 0
+
+  responses:
+    AuthenticationRequired:
+      description: The user is not authenticated or the account no longer exists.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            unauthenticated:
+              value:
+                message: Authentication Required
+            deletedAccount:
+              value:
+                message: User account no longer exists
+    ServiceUnavailable:
+      description: An unexpected service or database error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Service unavailable
+            error: Database unavailable
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+        error:
+          description: Additional validation or service error details.
+          nullable: true
+          oneOf:
+            - type: string
+            - type: array
+              items: {}
+            - type: object
+    CreateRoomRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Room name. Leading and trailing whitespace is trimmed.
+          example: Engineering
+        maxMembers:
+          type: integer
+          minimum: 2
+          maximum: 50
+          default: 50
+          example: 20
+    Room:
+      type: object
+      required:
+        - id
+        - name
+        - createdBy
+        - maxMembers
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Engineering
+        createdBy:
+          type: integer
+          example: 1
+        maxMembers:
+          type: integer
+          example: 50
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    RoomMembership:
+      type: object
+      required:
+        - id
+        - roomId
+        - userId
+        - joinedAt
+      properties:
+        id:
+          type: integer
+          example: 1
+        roomId:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 1
+        joinedAt:
+          type: string
+          format: date-time
+    RoomMembershipWithRoom:
+      allOf:
+        - $ref: '#/components/schemas/RoomMembership'
+        - type: object
+          required:
+            - room
+          properties:
+            room:
+              $ref: '#/components/schemas/Room'
+    Message:
+      type: object
+      required:
+        - id
+        - senderId
+        - content
+        - createdAt
+      properties:
+        id:
+          type: integer
+          example: 42
+        senderId:
+          type: integer
+          example: 1
+        receiverId:
+          type: integer
+          nullable: true
+          example: 2
+        roomId:
+          type: integer
+          nullable: true
+          example: 1
+        content:
+          type: string
+          example: Hello there!
+        createdAt:
+          type: string
+          format: date-time
+    PrivateConversationResponse:
+      type: object
+      required:
+        - message
+        - data
+        - pagination
+      properties:
+        message:
+          type: string
+          example: Conversation history retrieved successfully
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    RoomMessagesResponse:
+      type: object
+      required:
+        - status
+        - message
+        - data
+      properties:
+        status:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Room messages retrieved successfully
+        data:
+          type: object
+          required:
+            - messages
+            - total
+            - limit
+            - offset
+          properties:
+            messages:
+              type: array
+              items:
+                $ref: '#/components/schemas/Message'
+            total:
+              type: integer
+              minimum: 0
+              example: 12
+            limit:
+              type: integer
+              example: 20
+            offset:
+              type: integer
+              example: 0
+    Pagination:
+      type: object
+      required:
+        - total
+        - limit
+        - offset
+        - hasMore
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          example: 12
+        limit:
+          type: integer
+          example: 10
+        offset:
+          type: integer
+          example: 0
+        hasMore:
+          type: boolean
+          example: true
