@@ -310,28 +310,9 @@ npm run format:check
 └── package.json          # Scripts and dependencies
 ```
 
-## 🔒 Security and deployment notes
 
-- Use a strong, unique `SESSION_SECRET` in every environment.
-- Use HTTPS in production and configure session cookies with `secure: true` behind TLS.
-- Restrict PostgreSQL access to the application network and use a least-privilege database user.
-- Do not commit `.env`, passwords, session secrets, or generated local data.
-- The current session cookie is HTTP-only and lasts 24 hours.
-- The application currently serves HTTP and WebSocket traffic from the same origin, which avoids a separate CORS configuration for the included frontend.
-
-## 🤝 Contributing
-
-1. Fork the repository and create a focused branch.
-2. Make the smallest complete change that matches the existing TypeScript and validation patterns.
-3. Run the build, lint, and format checks.
-4. Open a pull request describing the behavior change and verification performed.
-
-## 📄 License
-
-No license file is currently included in this repository. Add a license before distributing the project outside its current development context.
 
 ## 🔗 Links
 
 - [Repository](https://github.com/updpujan/Real-Time-Chat-Application)
-- [Issues](https://github.com/updpujan/Real-Time-Chat-Application/issues)
 - [OpenAPI specification](./src/docs/swagger.yaml)
