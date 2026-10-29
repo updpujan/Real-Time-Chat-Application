@@ -5,6 +5,7 @@ import {
   joinRoomController,
   leaveRoomController,
   getMyRoom,
+  getRoomMessageHistoryController,
 } from '../controller/chat/roomController.js';
 
 const route = express.Router();
@@ -17,5 +18,6 @@ route.post('/createRoom', createRoomController);
 route.post('/joinRoom/:roomId', joinRoomController);
 route.delete('/leaveRoom/:roomId/member/me', leaveRoomController);
 route.get('/allRooms', getMyRoom);
+route.get('/:roomId/messages', getRoomMessageHistoryController);
 
 export default route;

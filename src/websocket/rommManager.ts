@@ -2,7 +2,7 @@ import type { AuthenticatedWebSocket } from './types.js';
 
 const rooms = new Map<number, Set<AuthenticatedWebSocket>>();
 
-export const getOrCreateRoom = (roomId: number): Set<AuthenticatedWebSocket> => {
+const getOrCreateRoom = (roomId: number): Set<AuthenticatedWebSocket> => {
   let room = rooms.get(roomId);
 
   if (!room) {
@@ -37,12 +37,12 @@ export const getRoom = (roomId: number): Set<AuthenticatedWebSocket> | undefined
   return rooms.get(roomId);
 };
 
-export const isInRoom = (roomId: number, socket: AuthenticatedWebSocket): boolean => {
-  const room = rooms.get(roomId);
+export const removeSocketFromAllRooms = (socket: AuthenticatedWebSocket): void => {
+  for (const [roomId, room] of rooms) {
+    room.delete(socket);
 
-  if (!room) {
-    return false;
+    if (room.size === 0) {
+      rooms.delete(roomId);
+    }
   }
-
-  return room.has(socket);
 };

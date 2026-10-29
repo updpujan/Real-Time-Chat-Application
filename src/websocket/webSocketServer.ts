@@ -14,10 +14,12 @@ import {
 } from './connectionManager.js';
 import { broadcast, broadcastToRoom } from './broadcast.js';
 import { createWebSocketMessage } from './message.js';
-import { isInRoom, joinRoom, leaveRoom } from './rommManager.js';
-import { canUserAccessRoom } from '../service/chat/room/roomService.js';
+import { joinRoom, removeSocketFromAllRooms } from './rommManager.js';
 import { privateMessageSchema } from '../schema/websocket/privateMessageSchema.js';
 import { sendPrivateMessage } from '../service/messageService.js';
+import { roomMessageSchema } from '../schema/websocket/roomSchema.js';
+import { sendRoomMessage } from '../service/messageService.js';
+import RoomMember from '../models/roomMembers.js';
 
 const HEARTBEAT_INTERVAL = 30_000;
 
@@ -58,7 +60,7 @@ export const initilizeWebSocket = (server: Server) => {
     }
   });
 
-  wss.on('connection', (socket: AuthenticatedWebSocket, _request) => {
+  wss.on('connection', async (socket: AuthenticatedWebSocket, _request) => {
     socket.isAlive = true;
     socket.on('pong', () => {
       socket.isAlive = true;
@@ -77,6 +79,15 @@ export const initilizeWebSocket = (server: Server) => {
 
     const message = createWebSocketMessage('user_online', { userId: socket.userId });
     broadcast(wss, message, socket);
+
+    const memberships = await RoomMember.findAll({
+      where: { userId: socket.userId },
+      attributes: ['roomId'],
+    });
+
+    for (const membership of memberships) {
+      joinRoom(membership.roomId, socket);
+    }
 
     socket.on('message', async (message) => {
       try {
@@ -166,62 +177,54 @@ export const initilizeWebSocket = (server: Server) => {
             break;
           }
 
-          case 'join_room': {
-            const roomId = Number(parsedMessage.data.roomId);
-
-            const result = await canUserAccessRoom(socket.userId, roomId);
-
-            if (!result.allowed) {
-              const message =
-                result.reason === 'ROOM_NOT_FOUND'
-                  ? createWebSocketMessage('error', {
-                      message: 'Room not found',
-                    })
-                  : createWebSocketMessage('error', {
-                      message: 'You are not a member of this room',
-                    });
-
-              socket.send(message);
-
-              break;
-            }
-
-            joinRoom(roomId, socket);
-
-            const message = createWebSocketMessage('room_joined', {
-              roomId,
-              userId: socket.userId,
-            });
-
-            broadcastToRoom(roomId, message);
-
-            break;
-          }
-
-          case 'leave_room': {
-            const roomId = Number(parsedMessage.data.roomId);
-            if (isInRoom(roomId, socket)) {
-              leaveRoom(roomId, socket);
-              console.log('Room left');
-              break;
-            }
-            console.log('Not in room');
-
-            break;
-          }
-
           case 'room_message': {
-            const roomId = Number(parsedMessage.data.roomId);
-            if (!isInRoom(roomId, socket)) {
-              console.log('Not in room');
+            const validation = roomMessageSchema.safeParse(parsedMessage.data);
+
+            if (!validation.success) {
+              socket.send(
+                createWebSocketMessage('error', {
+                  message: 'Invalid room message',
+                  error: validation.error.issues.map((issue) => issue.message),
+                }),
+              );
               break;
             }
-            const message = createWebSocketMessage('room_message', {
-              roomId,
-              userId: socket.userId,
-              message: parsedMessage.data.message,
+
+            const { roomId, content } = validation.data;
+
+            const result = await sendRoomMessage(socket.userId, roomId, content);
+
+            if (!result.success) {
+              socket.send(
+                createWebSocketMessage('error', {
+                  message: result.reason,
+                }),
+              );
+              break;
+            }
+
+            const savedMessage = result.message;
+
+            socket.send(
+              createWebSocketMessage('room_message_saved', {
+                messageId: savedMessage.id,
+                roomId: savedMessage.roomId,
+                senderId: savedMessage.senderId,
+                content: savedMessage.content,
+                createdAt: savedMessage.createdAt,
+              }),
+            );
+
+            const messagePayload = createWebSocketMessage('room_message', {
+              messageId: savedMessage.id,
+              roomId: savedMessage.roomId,
+              senderId: savedMessage.senderId,
+              content: savedMessage.content,
+              createdAt: savedMessage.createdAt,
             });
-            broadcastToRoom(roomId, message, socket);
+
+            broadcastToRoom(roomId, messagePayload, socket);
+
             break;
           }
 
@@ -234,13 +237,16 @@ export const initilizeWebSocket = (server: Server) => {
     });
 
     socket.on('close', () => {
+      removeSocketFromAllRooms(socket);
       const wasOnline = removeConnection(socket.userId, socket);
-      clearInterval(heartbeatInterval);
-
       if (wasOnline) {
         broadcastPresence('user_offline', socket.userId);
       }
     });
+  });
+
+  wss.on('close', () => {
+    clearInterval(heartbeatInterval);
   });
 
   return wss;

@@ -9,6 +9,8 @@ import {
 import { createRoomSchema, joinRoomSchema } from '../../schema/websocket/roomSchema.js';
 import { AppError } from '../../errors/errorType.js';
 
+import { notifyRoomJoined, notifyRoomLeft } from '../../websocket/roomMembershipEvents.js';
+
 export const createRoomController = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const roomInput = createRoomSchema.safeParse(req.body);
@@ -45,6 +47,7 @@ export const joinRoomController = async (req: Request, res: Response, next: Next
 
     const userId = Number(req.session.userId);
     const membership = await joinRoom(joinRoomVal.data, userId);
+    notifyRoomJoined(userId, joinRoomVal.data);
     return res.status(201).json({
       message: 'Room joined sucessfully',
       data: membership.dataValues,
@@ -66,6 +69,7 @@ export const leaveRoomController = async (req: Request, res: Response, next: Nex
     }
     const userId = Number(req.session.userId);
     await leaveRoom(leaveRoomVal.data, userId);
+    notifyRoomLeft(userId, leaveRoomVal.data);
     return res.status(204).send();
   } catch (err) {
     next(err);
@@ -84,5 +88,63 @@ export const getMyRoom = async (req: Request, res: Response, next: NextFunction)
     });
   } catch (err) {
     next(err);
+  }
+};
+
+import {
+  roomMessageHistoryParamsSchema,
+  roomMessageHistoryQuerySchema,
+} from '../../schema/websocket/roomSchema.js';
+import { getRoomMessageHistory } from '../../service/messageService.js';
+
+export const getRoomMessageHistoryController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const paramsResult = roomMessageHistoryParamsSchema.safeParse(req.params);
+    const queryResult = roomMessageHistoryQuerySchema.safeParse(req.query);
+
+    if (!paramsResult.success || !queryResult.success) {
+      throw new AppError({
+        status: 400,
+        message: 'Invalid room ID or pagination parameters',
+        error: [paramsResult.error, queryResult.error],
+      });
+    }
+
+    const userId = req.session.userId;
+
+    if (userId === undefined) {
+      throw new AppError({
+        status: 401,
+        message: 'Authentication required',
+        error: 'User is not authenticated',
+      });
+    }
+
+    const { roomId } = paramsResult.data;
+    const { limit, offset } = queryResult.data;
+
+    const result = await getRoomMessageHistory(userId, roomId, limit, offset);
+
+    if (!result.success) {
+      const status = result.reason === 'Room not found' ? 404 : 403;
+      throw new AppError({ status: status, message: result.reason });
+    }
+
+    res.status(200).json({
+      status: 200,
+      message: 'Room messages retrieved successfully',
+      data: {
+        messages: result.messages,
+        total: result.total,
+        limit,
+        offset,
+      },
+    });
+  } catch (error) {
+    next(error);
   }
 };

@@ -17,17 +17,21 @@ export const broadcast = (
 export const broadcastToRoom = (
   roomId: number,
   message: string,
-  exclude?: AuthenticatedWebSocket,
-) => {
+  excludedSocket?: AuthenticatedWebSocket,
+  excludedUserId?: number,
+): void => {
   const room = getRoom(roomId);
 
-  if (!room) {
-    return;
-  }
+  if (!room) return;
 
-  room.forEach((socket) => {
-    if (socket !== exclude && socket.readyState === WebSocket.OPEN) {
+  for (const socket of room) {
+    if (socket === excludedSocket) continue;
+    if (excludedUserId !== undefined && socket.userId === excludedUserId) {
+      continue;
+    }
+
+    if (socket.readyState === 1) {
       socket.send(message);
     }
-  });
+  }
 };

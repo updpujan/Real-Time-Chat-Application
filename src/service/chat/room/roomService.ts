@@ -3,6 +3,7 @@ import { AppError } from '../../../errors/errorType.js';
 import sequelize from '../../../config/database.js';
 import Room from '../../../models/room.js';
 import type { CreateRoomInput } from '../../../schema/websocket/roomSchema.js';
+import { syncUserRoomConnections } from '../../roomServices.js';
 
 interface RoomAccessResult {
   allowed: boolean;
@@ -13,7 +14,7 @@ export const canUserAccessRoom = async (
   userId: number,
   roomId: number,
 ): Promise<RoomAccessResult> => {
-  const room = await RoomMember.findByPk(roomId);
+  const room = await Room.findByPk(roomId);
   if (!room) {
     return {
       allowed: false,
@@ -93,6 +94,8 @@ export const joinRoom = async (roomId: number, userId: number) => {
 
     const membership = await RoomMember.create({ roomId, userId }, { transaction });
 
+    syncUserRoomConnections(userId, roomId, 'join');
+
     return membership;
   });
 };
@@ -121,6 +124,9 @@ export const leaveRoom = async (roomId: number, userId: number) => {
     }
 
     await exestingMembership.destroy({ transaction });
+
+    syncUserRoomConnections(userId, roomId, 'leave');
+
     return;
   });
 };

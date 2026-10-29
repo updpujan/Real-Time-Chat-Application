@@ -17,10 +17,10 @@ export type WebSocketEventType =
   | 'chat_message'
   | 'typing'
   | 'stop_typing'
-  | 'join_room'
-  | 'leave_room'
-  | 'room_joined'
   | 'room_message'
+  | 'room_message_saved'
   | 'error'
   | 'private_message'
-  | 'private_message_saved';
+  | 'private_message_saved'
+  | 'room_member_joined'
+  | 'room_member_left';

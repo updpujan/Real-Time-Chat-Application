@@ -1,5 +1,6 @@
 import User from '../models/users.js';
 import Message from '../models/message.js';
+import { canUserAccessRoom } from './chat/room/roomService.js';
 import { Op } from 'sequelize';
 import type { PrivateMessageInput } from '../schema/websocket/privateMessageSchema.js';
 
@@ -112,4 +113,67 @@ export const deletePrivateMessage = async (
   }
   await message.destroy();
   return { success: true };
+};
+
+export const sendRoomMessage = async (senderId: number, roomId: number, content: string) => {
+  const access = await canUserAccessRoom(senderId, roomId);
+
+  if (!access.allowed) {
+    return {
+      success: false as const,
+      reason:
+        access.reason === 'ROOM_NOT_FOUND' ? 'Room not found' : 'You are not a member of this room',
+    };
+  }
+
+  const message = await Message.create({
+    senderId,
+    roomId,
+    receiverId: null,
+    content,
+  });
+
+  return {
+    success: true as const,
+    message,
+  };
+};
+
+export const getRoomMessageHistory = async (
+  userId: number,
+  roomId: number,
+  limit: number,
+  offset: number,
+) => {
+  const access = await canUserAccessRoom(userId, roomId);
+
+  if (!access.allowed) {
+    return {
+      success: false as const,
+      reason:
+        access.reason === 'ROOM_NOT_FOUND' ? 'Room not found' : 'You are not a member of this room',
+    };
+  }
+
+  const result = await Message.findAndCountAll({
+    where: {
+      roomId,
+      receiverId: {
+        [Op.is]: null,
+      },
+    },
+    attributes: ['id', 'roomId', 'senderId', 'content', 'createdAt'],
+    order: [
+      ['createdAt', 'DESC'],
+      ['id', 'DESC'],
+    ],
+    limit,
+    offset,
+  });
+
+  return {
+    success: true as const,
+    messages: result.rows,
+    total: result.count,
+  };
 };
