@@ -24,10 +24,6 @@ const startServer = async () => {
     server.listen(PORT, () => {
       console.log(`HTTP server running on port ${PORT}`);
     });
-
-    await redis.set('key','this is value');
-    const value = await redis.get('key1');
-    console.log(value);
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);

@@ -10,6 +10,7 @@ import { createRoomSchema, joinRoomSchema } from '../../schema/websocket/roomSch
 import { AppError } from '../../errors/errorType.js';
 
 import { notifyRoomJoined, notifyRoomLeft } from '../../websocket/roomMembershipEvents.js';
+import redis from '../../config/redis.js';
 
 export const createRoomController = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -79,8 +80,24 @@ export const leaveRoomController = async (req: Request, res: Response, next: Nex
 export const getMyRoom = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = Number(req.session.userId);
-    const rooms = await getMyRooms(userId);
+    const cacheKey = String(userId);
 
+    if (redis.isReady) {
+      const cachedRoom = await redis.get(cacheKey);
+
+      if (cachedRoom !== null) {
+        console.log('sent from redis');
+        return res.status(200).json({
+          status: 200,
+          message: 'Rooms retrieved successfully',
+          data: JSON.parse(cachedRoom),
+        });
+      }
+    }
+    const rooms = await getMyRooms(userId);
+    await redis.set(cacheKey, JSON.stringify(rooms), {
+      EX: 300,
+    });
     return res.status(200).json({
       status: 200,
       message: 'Rooms retrieved successfully',
