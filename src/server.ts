@@ -4,6 +4,7 @@ import sequelize from './config/database.js';
 import app from './app.js';
 import './models/index.js';
 import { initilizeWebSocket } from './websocket/webSocketServer.js';
+import redis from './config/redis.js';
 
 import http from 'node:http';
 
@@ -14,6 +15,8 @@ const startServer = async () => {
     await sequelize.authenticate();
 
     console.log('Database connected successfully');
+    await redis.connect();
+    console.log('Redis connected sucessfully');
 
     const server = http.createServer(app);
     initilizeWebSocket(server);
@@ -21,6 +24,10 @@ const startServer = async () => {
     server.listen(PORT, () => {
       console.log(`HTTP server running on port ${PORT}`);
     });
+
+    await redis.set('key','this is value');
+    const value = await redis.get('key1');
+    console.log(value);
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
