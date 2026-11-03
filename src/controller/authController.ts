@@ -5,10 +5,12 @@ import login from '../service/auth/login.js';
 import { SuccessResponse } from '../types/response.js';
 import User from '../models/users.js';
 import { AppError } from '../errors/errorType.js';
+import logger from '../config/logger.js';
 
 export const registerController = async (req: Request, res: Response, _next: NextFunction) => {
   try {
     const response: SuccessResponse = await register(req.body);
+    logger.info(response.message, { status: response.status });
     return res.status(response.status).json({
       message: response.message,
     });
@@ -22,6 +24,7 @@ export const loginController = async (req: Request, res: Response, _next: NextFu
     const response: SuccessResponse<User> = await login(req.body.email, req.body.password);
     const id = response.data?.dataValues.id;
     req.session.userId = Number(id);
+    logger.info(response.message, { status: response.status, userId: id });
     return res.status(response.status).json({
       message: response.message,
     });
@@ -35,10 +38,12 @@ export const logoutController = async (req: Request, res: Response, _next: NextF
     if (!req.session.userId) {
       throw new AppError({ status: 401, message: 'User not Authenticated' });
     }
+    const id = req.session.userId;
     req.session.destroy((error) => {
       if (error) {
         throw new AppError({ status: 503, message: 'Failed to destroy session', error });
       }
+      logger.info('logout sucessfull', { status: 200, userId: id });
       res.clearCookie('connect.sid');
 
       return res.status(200).json({

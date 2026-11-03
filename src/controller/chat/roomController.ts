@@ -11,6 +11,7 @@ import { AppError } from '../../errors/errorType.js';
 
 import { notifyRoomJoined, notifyRoomLeft } from '../../websocket/roomMembershipEvents.js';
 import redis from '../../config/redis.js';
+import logger from '../../config/logger.js';
 
 export const createRoomController = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -25,6 +26,11 @@ export const createRoomController = async (req: Request, res: Response, next: Ne
     const currentUserId = Number(req.session.userId);
 
     const room = await createRoom(currentUserId, roomInput.data);
+    logger.info('room created sucessfully Sucessfully', {
+      status: 201,
+      roomId: room.dataValues.id,
+      creater: room.dataValues.createdBy,
+    });
     return res.status(201).json({
       message: 'Room create sucessfully',
       data: room.dataValues,
@@ -49,6 +55,11 @@ export const joinRoomController = async (req: Request, res: Response, next: Next
     const userId = Number(req.session.userId);
     const membership = await joinRoom(joinRoomVal.data, userId);
     notifyRoomJoined(userId, joinRoomVal.data);
+    logger.info('room joined Sucessfully', {
+      status: 201,
+      roomId: membership.dataValues.roomId,
+      userId: membership.dataValues.userId,
+    });
     return res.status(201).json({
       message: 'Room joined sucessfully',
       data: membership.dataValues,
@@ -71,6 +82,11 @@ export const leaveRoomController = async (req: Request, res: Response, next: Nex
     const userId = Number(req.session.userId);
     await leaveRoom(leaveRoomVal.data, userId);
     notifyRoomLeft(userId, leaveRoomVal.data);
+    logger.info('room left Sucessfully', {
+      status: 204,
+      roomId: leaveRoomVal.data,
+      userId: userId,
+    });
     return res.status(204).send();
   } catch (err) {
     next(err);
@@ -86,7 +102,7 @@ export const getMyRoom = async (req: Request, res: Response, next: NextFunction)
       const cachedRoom = await redis.get(cacheKey);
 
       if (cachedRoom !== null) {
-        console.log('sent from redis');
+        logger.info('Rooms retrived sucessfully-redis', { status: 200, userId: userId });
         return res.status(200).json({
           status: 200,
           message: 'Rooms retrieved successfully',
@@ -98,6 +114,7 @@ export const getMyRoom = async (req: Request, res: Response, next: NextFunction)
     await redis.set(cacheKey, JSON.stringify(rooms), {
       EX: 300,
     });
+    logger.info('Rooms retrived sucessfully-db', { status: 200, userId: userId });
     return res.status(200).json({
       status: 200,
       message: 'Rooms retrieved successfully',

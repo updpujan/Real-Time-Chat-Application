@@ -13,6 +13,7 @@ import {
   messageHistoryQuerySchema,
 } from '../../schema/websocket/privateMessageSchema.js';
 import { AppError } from '../../errors/errorType.js';
+import logger from '../../config/logger.js';
 
 export const getchatHistory = async (
   req: Request,
@@ -72,6 +73,11 @@ export const getchatHistory = async (
         offset,
       });
 
+      logger.info('Private conversation Retrived Sucessfully', {
+        status: 200,
+        currentUserId: currentUserId,
+        otherUserId: id,
+      });
       res.status(200).json({
         status: 200,
         message: 'Private conversation history retrieved successfully',
@@ -119,6 +125,11 @@ export const getchatHistory = async (
       offset,
     });
 
+    logger.info('Room conversation Retrived Sucessfully', {
+      status: 200,
+      roomId: id,
+      userId: req.session.userId,
+    });
     res.status(200).json({
       status: 200,
       message: 'Group conversation history retrieved successfully',
@@ -150,6 +161,11 @@ export const deleteChatMessage = async (req: Request, res: Response, next: NextF
     if (!result.success) {
       throw new AppError({ status: 404, message: result.reason });
     }
+    logger.info('Message deleted Sucessfully', {
+      status: 204,
+      messageId: messageId.data.messId,
+      senderId: senderId,
+    });
 
     return res.status(204).send();
   } catch (err) {

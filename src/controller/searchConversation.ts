@@ -3,6 +3,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { AppError } from '../errors/errorType.js';
 import { chatSearchQuerySchema } from '../schema/websocket/privateMessageSchema.js';
 import { searchChat } from '../service/chat/searchConversation.js';
+import logger from '../config/logger.js';
 
 const searchCOnversationController = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -23,6 +24,11 @@ const searchCOnversationController = async (req: Request, res: Response, next: N
       query: queryResult.data.q,
     });
 
+    logger.info('searched result', {
+      status: 200,
+      userId: currentUserId,
+      searchTerm: queryResult.data.q,
+    });
     res.status(200).json({
       message: 'Search results retrieved successfully',
       data: result,
