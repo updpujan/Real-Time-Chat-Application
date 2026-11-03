@@ -18,13 +18,6 @@ const searchCOnversationController = async (req: Request, res: Response, next: N
 
     const currentUserId = Number(req.session.userId);
 
-    if (!Number.isSafeInteger(currentUserId) || currentUserId <= 0) {
-      throw new AppError({
-        status: 401,
-        message: 'Authentication required',
-      });
-    }
-
     const result = await searchChat({
       currentUserId,
       query: queryResult.data.q,

@@ -38,6 +38,7 @@
   },
   "homepage": "https://github.com/updpujan/Real-Time-Chat-Application#readme",
   "dependencies": {
+    "@elastic/elasticsearch": "^9.5.1",
     "bcrypt": "^6.0.0",
     "connect-session-sequelize": "^8.0.6",
     "cookie": "^2.0.1",
