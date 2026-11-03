@@ -1,0 +1,1 @@
+{"version":3,"file":"searchConversation.d.ts","sourceRoot":"","sources":["../../../src/service/chat/searchConversation.ts"],"names":[],"mappings":"AAEA,OAAO,IAAI,MAAM,uBAAuB,CAAC;AAIzC,UAAU,iBAAiB;IACzB,aAAa,EAAE,MAAM,CAAC;IACtB,KAAK,EAAE,MAAM,CAAC;CACf;AAED,eAAO,MAAM,UAAU,GAAU,0BAA0B,iBAAiB;;;;;;;;;;EAqE3E,CAAC"}

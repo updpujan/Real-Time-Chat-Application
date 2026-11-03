@@ -31,6 +31,7 @@ RoomMember.init({
         type: DataTypes.DATE,
         allowNull: false,
         field: 'joined_at',
+        defaultValue: DataTypes.NOW,
     },
 }, {
     sequelize,

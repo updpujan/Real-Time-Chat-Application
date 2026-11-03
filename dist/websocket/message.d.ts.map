@@ -1,0 +1,1 @@
+{"version":3,"file":"message.d.ts","sourceRoot":"","sources":["../../src/websocket/message.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,kBAAkB,EAAE,MAAM,YAAY,CAAC;AAChD,eAAO,MAAM,sBAAsB,GAAI,CAAC,EAAE,MAAM,kBAAkB,EAAE,MAAM,CAAC,KAAG,MAK7E,CAAC"}

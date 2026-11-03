@@ -46,6 +46,11 @@ export async function up(queryInterface) {
             allowNull: false,
             defaultValue: DataTypes.NOW,
         },
+        updated_at: {
+            type: DataTypes.DATE,
+            allowNull: false,
+            defaultValue: DataTypes.NOW,
+        },
     });
     await queryInterface.sequelize.query(`
     ALTER TABLE "messages"

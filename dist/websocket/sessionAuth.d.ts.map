@@ -1,0 +1,1 @@
+{"version":3,"file":"sessionAuth.d.ts","sourceRoot":"","sources":["../../src/websocket/sessionAuth.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,eAAe,EAAE,MAAM,WAAW,CAAC;AAKjD,QAAA,MAAM,gBAAgB,GAAI,SAAS,eAAe,KAAG,OAAO,CAAC,MAAM,GAAG,IAAI,CA4CzE,CAAC;AAEF,eAAe,gBAAgB,CAAC"}
